@@ -16,12 +16,10 @@ import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
@@ -32,13 +30,12 @@ import java.nio.ByteOrder;
 
 import app.ij.mlwithtensorflowlite.ml.Model;
 
-
 public class MainActivity extends AppCompatActivity {
 
     Button camera, gallery;
     ImageView imageView;
     TextView result;
-    int imageSize = 32;
+    int imageSize = 224; // Change this to 224 to match the model's expected input size
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
             Model model = Model.newInstance(getApplicationContext());
 
             // Creates inputs for reference.
-            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 32, 32, 3}, DataType.FLOAT32);
+            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 224, 224, 3}, DataType.FLOAT32);
             ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * imageSize * imageSize * 3);
             byteBuffer.order(ByteOrder.nativeOrder());
 
@@ -87,9 +84,9 @@ public class MainActivity extends AppCompatActivity {
             for(int i = 0; i < imageSize; i ++){
                 for(int j = 0; j < imageSize; j++){
                     int val = intValues[pixel++]; // RGB
-                    byteBuffer.putFloat(((val >> 16) & 0xFF) * (1.f / 1));
-                    byteBuffer.putFloat(((val >> 8) & 0xFF) * (1.f / 1));
-                    byteBuffer.putFloat((val & 0xFF) * (1.f / 1));
+                    byteBuffer.putFloat(((val >> 16) & 0xFF) * (1.f / 255.f));
+                    byteBuffer.putFloat(((val >> 8) & 0xFF) * (1.f / 255.f));
+                    byteBuffer.putFloat((val & 0xFF) * (1.f / 255.f));
                 }
             }
 
@@ -116,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
             model.close();
         } catch (IOException e) {
             // TODO Handle the exception
+            e.printStackTrace();
         }
     }
 
